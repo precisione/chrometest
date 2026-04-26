@@ -1,5 +1,13 @@
 # SOLO PER TEST
 
+## LID (Linked Device ID) Support
+
+Baileys now includes improved support for LID addressing to make bots more fluid and responsive. The library automatically handles:
+
+- **LID/PN Addressing**: Automatic detection and routing to phone numbers or linked device IDs
+- **Participant Mapping**: Proper mapping of participants with LID and PN contexts
+- **Context Preservation**: LID information is preserved in message contexts for accurate responses
+
 ## Button Messages
 
 Baileys now supports sending interactive button messages. There are two types of button messages:

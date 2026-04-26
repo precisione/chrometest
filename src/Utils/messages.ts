@@ -2,30 +2,6 @@ import { Boom } from '@hapi/boom'
 import { randomBytes } from 'crypto'
 import { promises as fs } from 'fs'
 import { type Transform } from 'stream'
-
-// Global declarations for Node.js types
-declare global {
-  const Buffer: {
-    from(data: any): any;
-    concat(buffers: any[]): any;
-  };
-  namespace NodeJS {
-    interface Global {
-      Buffer: typeof Buffer;
-    }
-  }
-  module 'crypto' {
-    export function randomBytes(size: number): any;
-  }
-  module 'fs' {
-    export const promises: any;
-  }
-  module 'stream' {
-    export class Transform extends any {}
-  }
-}
-
-type BufferType = typeof Buffer extends { from: any } ? ReturnType<typeof Buffer.from> : any;
 import { proto } from '../../WAProto/index.js'
 import {
 	CALL_AUDIO_PREFIX,
@@ -184,7 +160,7 @@ export const prepareWAMessageMedia = async (
 	}
 
 	if (cacheableKey) {
-		const mediaBuff = await options.mediaCache!.get<BufferType>(cacheableKey)
+		const mediaBuff = await options.mediaCache!.get<any>(cacheableKey)
 		if (mediaBuff) {
 			logger?.debug({ cacheableKey }, 'got media cache hit')
 
@@ -788,7 +764,7 @@ export const generateWAMessageFromContent = (
 
 	if (quoted && !isJidNewsletter(jid)) {
 		const participant = quoted.key.fromMe
-			? userJid // TODO: Add support for LIDs
+			? userJid
 			: quoted.participant || quoted.key.participant || quoted.key.remoteJid
 
 		let quotedMsg = normalizeMessageContent(quoted.message)!
@@ -804,6 +780,13 @@ export const generateWAMessageFromContent = (
 		const contextInfo: proto.IContextInfo =
 			('contextInfo' in innerMessage[key]! && innerMessage[key]?.contextInfo) || {}
 		contextInfo.participant = jidNormalizedUser(participant!)
+		// Add LID support for better bot fluidity
+		if (quoted.key.participantAlt) {
+			contextInfo.participantAlt = quoted.key.participantAlt
+		}
+		if (quoted.key.participantUsername) {
+			contextInfo.participantUsername = quoted.key.participantUsername
+		}
 		contextInfo.stanzaId = quoted.key.id
 		contextInfo.quotedMessage = quotedMsg
 
@@ -811,6 +794,10 @@ export const generateWAMessageFromContent = (
 		// hence, remoteJid of group must also be entered
 		if (jid !== quoted.key.remoteJid) {
 			contextInfo.remoteJid = quoted.key.remoteJid
+			// Add LID support for remoteJid
+			if (quoted.key.remoteJidAlt) {
+				contextInfo.remoteJidAlt = quoted.key.remoteJidAlt
+			}
 		}
 
 		if (contextInfo && innerMessage[key]) {
@@ -839,7 +826,7 @@ export const generateWAMessageFromContent = (
 
 	message = WAProto.Message.create(message)
 
-	const messageJSON = {
+	const messageJSON: any = {
 		key: {
 			remoteJid: jid,
 			fromMe: true,
@@ -848,9 +835,16 @@ export const generateWAMessageFromContent = (
 		message: message,
 		messageTimestamp: timestamp,
 		messageStubParameters: [],
-		participant: isJidGroup(jid) || isJidStatusBroadcast(jid) ? userJid : undefined, // TODO: Add support for LIDs
+		// Add LID support for better bot fluidity
+		participant: isJidGroup(jid) || isJidStatusBroadcast(jid) ? userJid : undefined,
 		status: WAMessageStatus.PENDING
 	}
+
+	// Add LID/PN addressing mode if available
+	if (options?.addressingMode) {
+		messageJSON.key.addressingMode = options.addressingMode
+	}
+
 	return WAProto.WebMessageInfo.fromObject(messageJSON) as WAMessage
 }
 
@@ -1157,7 +1151,7 @@ export const downloadMediaMessage = async <Type extends 'buffer' | 'stream'>(
 		throw error
 	})
 
-	return result as Type extends 'buffer' ? BufferType : Transform
+	return result as Type extends 'buffer' ? any : Transform
 
 	async function downloadMsg() {
 		const mContent = extractMessageContent(message.message)
@@ -1186,7 +1180,7 @@ export const downloadMediaMessage = async <Type extends 'buffer' | 'stream'>(
 
 		const stream = await downloadContentFromMessage(download, mediaType, options)
 		if (type === 'buffer') {
-			const bufferArray: BufferType[] = []
+			const bufferArray: any[] = []
 			for await (const chunk of stream) {
 				bufferArray.push(chunk)
 			}
