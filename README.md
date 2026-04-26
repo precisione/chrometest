@@ -1,55 +1,157 @@
-# SOLO PER TEST
+# 💬 Cheome Hearts - Bot WhatsApp Avanzato
 
-## LID (Linked Device ID) Support
+> **Il bot WhatsApp più fluido e reattivo che tu abbia mai visto**
 
-Baileys now includes improved support for LID addressing to make bots more fluid and responsive. The library automatically handles:
+Benvenuto in Cheome Hearts! Un bot WhatsApp super potente costruito con **Baileys**, che sfrutta le ultime tecnologie per offrirti un'esperienza senza pari.
 
-- **LID/PN Addressing**: Automatic detection and routing to phone numbers or linked device IDs
-- **Participant Mapping**: Proper mapping of participants with LID and PN contexts
-- **Context Preservation**: LID information is preserved in message contexts for accurate responses
+---
 
-## Button Messages
+## 🌟 Cosa Rende Speciale Cheome Hearts?
 
-Baileys now supports sending interactive button messages. There are two types of button messages:
+✨ **Supporto LID/PN Intelligente**
+- Auto-routing verso dispositivi e numeri di telefono
+- Messaggi sempre indirizzati correttamente
+- Zero ritardi, massima fluidità
 
-### ButtonsMessage (Quick Reply Buttons)
+⚡ **Pulsanti Interattivi**
+- CTA URL per link e azioni web
+- Call buttons per contatti telefonici
+- Quick reply per risposte veloci
+
+🎯 **Context Aware**
+- Ricorda il contesto delle conversazioni
+- Mantiene le informazioni dei dispositivi collegati
+- Messaggi sempre coerenti e naturali
+
+---
+
+## 🚀 Inizia Subito
+
+### Messaggi con Pulsanti Quick Reply
 
 ```typescript
 await sock.sendMessage(jid, {
   buttonsMessage: {
-    text: 'Choose an option',
-    footer: 'Footer text',
+    text: '🎉 Scegli un\'opzione:',
+    footer: 'Cheome Hearts',
     buttons: [
-      { displayText: 'Option 1', id: 'opt1' },
-      { displayText: 'Option 2', id: 'opt2' }
+      { displayText: '✅ Opzione 1', id: 'opt1' },
+      { displayText: '🎯 Opzione 2', id: 'opt2' }
     ]
   }
 })
 ```
 
-### TemplateMessage (CTA URL and Call Buttons)
+### Messaggi Template con URL e Chiamate
 
 ```typescript
 await sock.sendMessage(jid, {
   templateMessage: {
-    text: 'Check this out',
-    footer: 'Template footer',
+    text: '👋 Scopri di più!',
+    footer: 'Powered by Cheome Hearts',
     buttons: [
-      { displayText: 'Visit Website', url: 'https://example.com', index: 0 },
-      { displayText: 'Call Now', phoneNumber: '+1234567890', index: 1 },
-      { displayText: 'Quick Reply', id: 'quick', index: 2 }
+      { displayText: '🌐 Visita il Sito', url: 'https://example.com', index: 0 },
+      { displayText: '📞 Chiamami', phoneNumber: '+1234567890', index: 1 },
+      { displayText: '💬 Richiedi Info', id: 'info', index: 2 }
     ]
   }
 })
 ```
 
-### Button Reply Handling
-
-When users tap buttons, you'll receive a `buttonsResponseMessage` or `templateButtonReplyMessage`:
+### Gestire le Risposte ai Pulsanti
 
 ```typescript
 if (msg.message?.buttonsResponseMessage) {
   const selectedId = msg.message.buttonsResponseMessage.selectedButtonId
-  console.log('Button selected:', selectedId)
+  console.log('❤️ Pulsante premuto:', selectedId)
+  // Reagisci al pulsante selezionato!
 }
 ```
+
+---
+
+## 💡 Funzionalità Avanzate
+
+### 🔗 Supporto LID (Linked Device ID)
+
+Il bot gestisce automaticamente:
+- **LID/PN Addressing**: Routing intelligente verso telefoni e dispositivi
+- **Participant Mapping**: MapPing perfetto dei partecipanti
+- **Context Preservation**: Le informazioni non vanno mai perse
+
+### 📨 Messaggi Fluidi
+
+Con Cheome Hearts, i tuoi messaggi:
+- Arrivano sempre al destinatario giusto
+- Mantengono il contesto della conversazione
+- Rispondono istantaneamente
+
+---
+
+## 📦 Cosa Include?
+
+- ✅ TypeScript completo per sicurezza massima
+- ✅ WebSockets per latenza ultrabassa
+- ✅ Supporto LID/PN per routing intelligente
+- ✅ Pulsanti interattivi (URL, chiamate, quick reply)
+- ✅ Gestione automatica del contesto
+- ✅ Error handling robusto
+
+---
+
+## 🎮 Esempi di Utilizzo
+
+### Bot Assistente
+```typescript
+sock.ev.on('messages.upsert', async (m) => {
+  const msg = m.messages[0]
+  
+  if (msg.message?.buttonsResponseMessage) {
+    switch (msg.message.buttonsResponseMessage.selectedButtonId) {
+      case 'opt1':
+        await sock.sendMessage(msg.key.remoteJid!, 
+          { text: '❤️ Hai scelto l\'opzione 1!' })
+        break
+      case 'opt2':
+        await sock.sendMessage(msg.key.remoteJid!, 
+          { text: '🎯 Hai scelto l\'opzione 2!' })
+        break
+    }
+  }
+})
+```
+
+---
+
+## 🔥 Perché Cheome Hearts?
+
+| Feature | Cheome Hearts | Altro |
+|---------|--------------|-------|
+| Supporto LID | ✅ Nativo | ❌ Parziale |
+| Pulsanti Interattivi | ✅ 3 Tipi | ⚠️ 1-2 Tipi |
+| Fluidità | ✅ Ultra-rapido | ❌ Lento |
+| Context Aware | ✅ Totale | ⚠️ Parziale |
+| Aggiornamenti | ✅ Frequenti | ❌ Rari |
+
+---
+
+## 📞 Supporto & Comunità
+
+- 💬 Discord: [WhiskeySockets Community](https://whiskey.so/discord)
+- 📚 Docs: [Baileys Wiki](https://baileys.wiki)
+- 🐛 Issues: [GitHub](https://github.com/WhiskeySockets/Baileys)
+
+---
+
+## ⚖️ Note Legali
+
+> Baileys è **NON affiliato** a WhatsApp
+>
+> Usa questo bot responsabilmente e rispetta i ToS di WhatsApp.
+> Non fare spam! Non fare stalking! Usa eticamente! ❤️
+
+---
+
+**Made with ❤️ by Cheome Hearts**
+
+*Costruito sulla fondamenta robuste di Baileys*
