@@ -217,6 +217,41 @@ export type ButtonReplyInfo = {
 	index: number
 }
 
+export type QuickReplyButton = {
+	displayText: string
+	id: string
+}
+
+export type URLButton = {
+	displayText: string
+	url: string
+}
+
+export type CallButton = {
+	displayText: string
+	phoneNumber: string
+}
+
+export type Button = QuickReplyButton | URLButton | CallButton
+
+export type TemplateButton = Button & {
+	index: number
+}
+
+export type ButtonsMessageOptions = {
+	text?: string
+	footer?: string
+	buttons: Button[]
+	headerType?: proto.Message.ButtonsMessage.HeaderType
+} & Contextable & Mentionable & Editable
+
+export type TemplateMessageOptions = {
+	text?: string
+	footer?: string
+	buttons: TemplateButton[]
+	templateId?: string
+} & Contextable & Mentionable & Editable
+
 export type GroupInviteInfo = {
 	inviteCode: string
 	inviteExpiration: number
@@ -257,6 +292,12 @@ export type AnyRegularMessageContent = (
 			location: WALocationMessage
 	  }
 	| { react: proto.Message.IReactionMessage }
+	| {
+			buttonsMessage: ButtonsMessageOptions
+	  }
+	| {
+			templateMessage: TemplateMessageOptions
+	  }
 	| {
 			buttonReply: ButtonReplyInfo
 			type: 'template' | 'plain'

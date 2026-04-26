@@ -2,6 +2,30 @@ import { Boom } from '@hapi/boom'
 import { randomBytes } from 'crypto'
 import { promises as fs } from 'fs'
 import { type Transform } from 'stream'
+
+// Global declarations for Node.js types
+declare global {
+  const Buffer: {
+    from(data: any): any;
+    concat(buffers: any[]): any;
+  };
+  namespace NodeJS {
+    interface Global {
+      Buffer: typeof Buffer;
+    }
+  }
+  module 'crypto' {
+    export function randomBytes(size: number): any;
+  }
+  module 'fs' {
+    export const promises: any;
+  }
+  module 'stream' {
+    export class Transform extends any {}
+  }
+}
+
+type BufferType = typeof Buffer extends { from: any } ? ReturnType<typeof Buffer.from> : any;
 import { proto } from '../../WAProto/index.js'
 import {
 	CALL_AUDIO_PREFIX,
@@ -160,7 +184,7 @@ export const prepareWAMessageMedia = async (
 	}
 
 	if (cacheableKey) {
-		const mediaBuff = await options.mediaCache!.get<Buffer>(cacheableKey)
+		const mediaBuff = await options.mediaCache!.get<BufferType>(cacheableKey)
 		if (mediaBuff) {
 			logger?.debug({ cacheableKey }, 'got media cache hit')
 
@@ -605,6 +629,73 @@ export const generateWAMessageContent = async (
 				trigger: 1,
 				limitSharingSettingTimestamp: Date.now(),
 				initiatedByMe: true
+			}
+		}
+	} else if (hasNonNullishProperty(message, 'buttonsMessage')) {
+		const buttonsMessage = message.buttonsMessage
+		const buttons: proto.Message.ButtonsMessage.IButton[] = buttonsMessage.buttons.map(button => {
+			if ('url' in button) {
+				// URL button - not directly supported in ButtonsMessage, use template instead
+				throw new Boom('URL buttons are not supported in buttonsMessage, use templateMessage instead', { statusCode: 400 })
+			} else if ('phoneNumber' in button) {
+				// Call button - not directly supported in ButtonsMessage, use template instead
+				throw new Boom('Call buttons are not supported in buttonsMessage, use templateMessage instead', { statusCode: 400 })
+			} else {
+				// Quick reply button
+				return {
+					buttonId: button.id,
+					buttonText: { displayText: button.displayText },
+					type: proto.Message.ButtonsMessage.Button.Type.RESPONSE
+				}
+			}
+		})
+
+		m.buttonsMessage = {
+			contentText: buttonsMessage.text,
+			footerText: buttonsMessage.footer,
+			buttons,
+			headerType: buttonsMessage.headerType || proto.Message.ButtonsMessage.HeaderType.TEXT
+		}
+	} else if (hasNonNullishProperty(message, 'templateMessage')) {
+		const templateMessage = message.templateMessage
+		const hydratedButtons: proto.IHydratedTemplateButton[] = templateMessage.buttons.map(button => {
+			const baseButton = {
+				index: button.index
+			}
+
+			if ('url' in button) {
+				return {
+					...baseButton,
+					urlButton: {
+						displayText: button.displayText,
+						url: button.url
+					}
+				}
+			} else if ('phoneNumber' in button) {
+				return {
+					...baseButton,
+					callButton: {
+						displayText: button.displayText,
+						phoneNumber: button.phoneNumber
+					}
+				}
+			} else {
+				return {
+					...baseButton,
+					quickReplyButton: {
+						displayText: button.displayText,
+						id: button.id
+					}
+				}
+			}
+		})
+
+		m.templateMessage = {
+			hydratedFourRowTemplate: {
+				hydratedContentText: templateMessage.text,
+				hydratedFooterText: templateMessage.footer,
+				hydratedButtons,
+				templateId: templateMessage.templateId
 			}
 		}
 	} else {
@@ -1066,7 +1157,7 @@ export const downloadMediaMessage = async <Type extends 'buffer' | 'stream'>(
 		throw error
 	})
 
-	return result as Type extends 'buffer' ? Buffer : Transform
+	return result as Type extends 'buffer' ? BufferType : Transform
 
 	async function downloadMsg() {
 		const mContent = extractMessageContent(message.message)
@@ -1095,7 +1186,7 @@ export const downloadMediaMessage = async <Type extends 'buffer' | 'stream'>(
 
 		const stream = await downloadContentFromMessage(download, mediaType, options)
 		if (type === 'buffer') {
-			const bufferArray: Buffer[] = []
+			const bufferArray: BufferType[] = []
 			for await (const chunk of stream) {
 				bufferArray.push(chunk)
 			}

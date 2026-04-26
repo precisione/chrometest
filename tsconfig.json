@@ -9,7 +9,7 @@
     "declarationMap": true,
     "moduleDetection": "force",
 
-    "lib": ["ES2020", "ESNext.Array", "DOM"],
+    "lib": ["ES2020", "ESNext.Array", "DOM", "Node"],
     "rootDir": "./src",
 
     // ESM Features
